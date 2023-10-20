@@ -29,14 +29,5 @@ int main()
         // so create two matrices w the given line, not sure which order but I'mma go with 
         int temp = 0;
 
-        for(int i=0; i < 6; i++);
-        {
-            for(int j= 0; j < 6; j++)
-            {
-             temp = j; 
-             printf("%d", temp);
-            }
-        }
-
     return 0;
 }
