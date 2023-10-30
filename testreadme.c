@@ -1,45 +1,138 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 
-#define MAX_SIZE 32
-//Create a read me of first.txt
+//function prototypes are not necessary but are good practice for early error detection, readability, compiler optimization
+//for early error detection, readability, compiler optimization
+// FUNCTION PROTOTYPES
+//====================
+void allocateColumns(int rows, int columns, int **array);
+int readData(int rows, int columns, FILE *t, int **array);
+void printData(int array_num, int rows, int columns, int **array);
+
+/// FUNCTIONS
+//=====================
+void allocateColumns(int rows, int columns, int **array){
+	for(int i=0; i < rows; i++){
+		//allocate columns here
+		array[i] = (int*)malloc(columns * sizeof(int));
+		//basically same error check
+		if(array[i] == NULL)
+		{
+			printf("There was an issue allocating memory.");
+			exit(1);
+		}
+	}
+}
+int readData(int rows, int columns, FILE *t, int **array)
+{
+	for(int i=0; i < rows; i++)
+	{
+		for(int j=0; j < columns; j++)
+		{
+			//reads int content of dynamically allocated array
+			//fscanf()!= 1 means that there was no successful read and assign to 1 item
+			if(fscanf(t, "%d", &array[i][j]) != 1)
+			{
+				printf("There was an error adding contents to array.");
+				//error indication
+				//note: error indication is usually indicated by a non-zero value.
+			}
+		}
+	}
+	return 0;
+}
+
+void printData(int array_num, int rows, int columns, int **array)
+{
+	printf("Array # %d :\n", array_num);
+	for(int i=0; i < rows; i++)
+	{
+		for(int j=0; j < columns; j++)
+		{
+			printf("%d ", array[i][j]);
+		}
+		printf("\n");
+	}
+
+}
+void printResult(int row1, int row2, int col1, int col2, int **array1, int** array2){
+
+	printf("\nMultiplying both arrays results in:\n ");
+	int results;
+	if((row1 && row2) <=3 || (col1 && col2) <=3 )
+	{
+		if(row1 < row2)
+		{	
+			int result = 0;
+			//row1 = 2, row2 = 3
+			//col1 = 3, col2 = 2
+			for(int i=0; i < row2; i++)
+			{
+				for(int j=0; j< col1; j++)
+				{
+					result = array1[i][j] * array2[j][i];
+					printf("%d " , result);
+				}
+			}
+		}
+
+	}
+	else{
+
+		printf("These are out of bounds. an error has occured\n");
+	}
+}
+void freeArray(int rows, int **array){
+	for(int i=0; i < rows; i++){
+		free(array[i]); 
+	}
+}
+
 int main()
 {
-    FILE *fp;
-    //declare pointer using pointer declaration
-    char *buffer = NULL;
-    char temp;
-    long size;
-    //this address will be used to store 
-    printf("Address of pointer : %p", buffer);
-    fp = fopen("first.txt", "r");
+	//file object
+	FILE *text;
+	int rows1, rows2, columns1, columns2, size;
 
-    if(fp == NULL)
-    {
-        printf("Something is wrong.");
-        fclose(fp);
-    }
+	text = fopen("first.txt", "r");
+	//if text is successfully accessed
+	if (text){
 
-    printf("File was opened successfully.");
-    //fseek(file, offset, SEEK_SET: moves the object pointer to the end of the file)
-    fseek(fp, 0, SEEK_END);
-    //ftell : returns the current file position of the specified stream with respect to the starting of the file
-    //using fseek we should be pointing to the end, and now we can use that as a reference for size of the array 
-    //based on the start of the file
-    size = ftell(fp);
-    printf("Size of file: %ld bytes", size);
-    // allocate memory using malloc()
-    // how to use malloc: ptr = (cast-type*) malloc(byte-size)
-    buffer = (char*)malloc(size);
-    fread(buffer, 1, size, fp);
-    buffer[size] = '\0';
-    printf("File content:\n%s\n", buffer);
-    //fseek(file, offset, SEEK_SET: moves the object pointer to beggining of the file)
-    //reset to begggining so that we can start reading characters
-    fseek(fp, 0, SEEK_SET);
-    
-    //free memory
-    free(buffer);
-    return 0; 
+		printf("File opened successfully!\n");
+
+		//reads the first line from file
+		//fscanf(file, 'const char' which conveniently can be intxint the way its written, gets stored in referenced variables)
+		if(fscanf(text, "%dx%d %dx%d", &rows1, &columns1, &rows2, &columns2))
+		{
+			 //dynamically allocate rows, had trouble w these parameters
+			 //allocateRows(rows1, &dynamicArray1);
+			 //allocateRows(rows2, &dynamicArray2);
+				int** dynamicArray1 = (int**) malloc(rows1 * (sizeof(int*)));
+				int** dynamicArray2 = (int**) malloc(rows2 * (sizeof(int*)));
+				//dynamically allocate columns
+				allocateColumns(rows1, columns1, dynamicArray1);
+				allocateColumns(rows2, columns2, dynamicArray2);
+
+				//read data
+				readData(rows1, columns1, text, dynamicArray1);
+				readData(rows2, columns2, text, dynamicArray2);
+
+				//printData
+				printData(1, rows1, columns1, dynamicArray1);
+				printData(2, rows2, columns2, dynamicArray2);
+				printResult(rows1, rows2, columns1, columns2, dynamicArray1, dynamicArray2);
+				
+				//free up dynamically allocated memory to avoid memory leaks 
+				freeArray(rows1, dynamicArray1);
+				freeArray(rows2, dynamicArray2);
+
+				//done reading, close the text
+				fclose(text);
+		}
+				
+	}
+	// text was not successfully accessed
+	else
+		printf("Error reading file.\n");
+	return 0;
 }
